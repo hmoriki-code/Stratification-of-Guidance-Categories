@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>対象者 新規登録 | 特定保健指導記録システム</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Hiragino Kaku Gothic ProN', 'メイリオ', Meiryo, sans-serif;
+            background-color: #f4f7f8; color: #333; min-height: 100vh;
+        }
+
+        header {
+            background-color: #134f5c; color: #fff; padding: 14px 32px;
+            display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15); position: relative; z-index: 10;
+        }
+        header h1 { font-size: 18px; font-weight: 600; letter-spacing: 0.5px; }
+        .header-user { font-size: 13px; opacity: 0.85; }
+
+        .layout { display: flex; min-height: calc(100vh - 52px); }
+
+        .sidebar { width: 220px; background-color: #0e3d47; padding: 20px 0; flex-shrink: 0; }
+        .sidebar a { display: block; color: #b0cfd6; text-decoration: none; padding: 11px 24px; font-size: 14px; transition: background 0.2s; }
+        .sidebar a:hover { background-color: #0b3039; color: #fff; }
+        .sidebar a.active { background-color: #134f5c; color: #fff; border-left: 3px solid #5ec4b6; font-weight: 600; }
+
+        main { flex: 1; padding: 32px 40px; min-width: 0; }
+
+        .page-title { font-size: 22px; font-weight: 700; color: #134f5c; margin-bottom: 6px; }
+        .page-desc { font-size: 13px; color: #777; margin-bottom: 28px; }
+
+        /* カード */
+        .card { background: #fff; border-radius: 10px; box-shadow: 0 1px 6px rgba(0,0,0,0.08); padding: 28px 32px; max-width: 880px; margin-bottom: 24px; }
+        .card-heading { font-size: 16px; font-weight: 700; color: #134f5c; padding-bottom: 12px; border-bottom: 2px solid #d4e6ea; margin-bottom: 20px; }
+
+        /* フォーム */
+        .form-group { margin-bottom: 18px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 600; color: #444; margin-bottom: 5px; }
+        .form-group label .required { background-color: #a64d79; color: #fff; font-size: 10px; padding: 2px 6px; border-radius: 3px; margin-left: 6px; vertical-align: middle; font-weight: 500; }
+        .form-group label .optional { background-color: #999; color: #fff; font-size: 10px; padding: 2px 6px; border-radius: 3px; margin-left: 6px; vertical-align: middle; font-weight: 500; }
+
+        .form-group input[type="text"],
+        .form-group input[type="date"],
+        .form-group input[type="number"],
+        .form-group select {
+            width: 100%; padding: 9px 12px; font-size: 13px;
+            border: 1px solid #c8d6d9; border-radius: 5px;
+            background: #fafcfc; font-family: inherit;
+            transition: border 0.2s, box-shadow 0.2s;
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none; border-color: #134f5c;
+            box-shadow: 0 0 0 3px rgba(19,79,92,0.15); background: #fff;
+        }
+        .form-group input:read-only {
+            background-color: #eef2f3; color: #666;
+        }
+        .form-hint { font-size: 11px; color: #999; margin-top: 3px; }
+
+        .form-row { display: flex; gap: 14px; }
+        .form-row .form-group { flex: 1; }
+
+        .form-row-3 { display: flex; gap: 14px; }
+        .form-row-3 .form-group { flex: 1; }
+
+        /* 保険者検索 */
+        .search-input-wrapper { position: relative; }
+        .search-input-wrapper input { padding-right: 32px; }
+        .search-icon { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: #aaa; font-size: 14px; pointer-events: none; }
+        .search-dropdown { position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid #c8d6d9; border-top: none; border-radius: 0 0 5px 5px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-height: 180px; overflow-y: auto; z-index: 20; display: none; }
+        .search-dropdown.show { display: block; }
+        .search-dropdown-item { padding: 9px 12px; font-size: 13px; cursor: pointer; transition: background 0.1s; }
+        .search-dropdown-item:hover { background-color: #f0f7f8; }
+        .search-dropdown-item .sub { font-size: 11px; color: #999; }
+
+        /* 血圧横並び */
+        .bp-row { display: flex; align-items: center; gap: 8px; }
+        .bp-row input { width: 100px; }
+        .bp-slash { font-size: 16px; color: #999; font-weight: 600; }
+
+        /* セクション区切り */
+        .section-divider { border: none; border-top: 1px dashed #d4e6ea; margin: 24px 0; }
+
+        /* 判定結果パネル */
+        .result-panel { background: #fff; border-radius: 10px; box-shadow: 0 1px 6px rgba(0,0,0,0.08); padding: 28px 32px; max-width: 880px; margin-bottom: 24px; }
+        .result-heading { font-size: 16px; font-weight: 700; color: #134f5c; padding-bottom: 12px; border-bottom: 2px solid #d4e6ea; margin-bottom: 20px; }
+
+        .result-steps { display: flex; flex-direction: column; gap: 12px; }
+
+        .step-row { display: flex; align-items: flex-start; gap: 14px; padding: 12px 16px; border-radius: 8px; background: #f8fafb; border: 1px solid #e8edef; }
+        .step-label { font-size: 12px; font-weight: 700; color: #134f5c; background: #d4e6ea; padding: 3px 10px; border-radius: 4px; white-space: nowrap; flex-shrink: 0; margin-top: 1px; }
+        .step-content { font-size: 13px; color: #555; line-height: 1.6; }
+        .step-content strong { color: #333; }
+
+        .final-result { margin-top: 20px; padding: 20px 24px; border-radius: 10px; text-align: center; }
+        .final-result .final-label { font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+        .final-result .final-value { font-size: 22px; font-weight: 800; }
+
+        .result-gray { background: #f0f0f0; border: 2px solid #ccc; }
+        .result-gray .final-label { color: #888; }
+        .result-gray .final-value { color: #666; }
+
+        .result-orange { background: #fff6ed; border: 2px solid #f5a623; }
+        .result-orange .final-label { color: #c77d0a; }
+        .result-orange .final-value { color: #e08a00; }
+
+        .result-red { background: #fdf0f0; border: 2px solid #e74c3c; }
+        .result-red .final-label { color: #c0392b; }
+        .result-red .final-value { color: #e74c3c; }
+
+        .result-yellow { background: #fffbe6; border: 2px solid #f0c929; }
+        .result-yellow .final-label { color: #a68b00; }
+        .result-yellow .final-value { color: #b8960a; }
+
+        .result-blue { background: #eef6fb; border: 2px solid #3498db; }
+        .result-blue .final-label { color: #2471a3; }
+        .result-blue .final-value { color: #2980b9; }
+
+        .result-waiting { font-size: 14px; color: #999; text-align: center; padding: 32px; }
+
+        /* ボタン */
+        .btn-area { margin-top: 28px; display: flex; gap: 12px; justify-content: flex-end; border-top: 1px solid #eee; padding-top: 20px; }
+        .btn { padding: 11px 32px; font-size: 14px; font-weight: 600; border: none; border-radius: 6px; cursor: pointer; transition: background 0.2s, transform 0.1s; font-family: inherit; text-decoration: none; display: inline-block; }
+        .btn:active { transform: scale(0.97); }
+        .btn-primary { background-color: #134f5c; color: #fff; }
+        .btn-primary:hover { background-color: #0e3d47; }
+        .btn-secondary { background-color: #e4eced; color: #3a5a60; }
+        .btn-secondary:hover { background-color: #d4e0e2; }
+
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            main { padding: 20px 12px; }
+            .card, .result-panel { padding: 20px 16px; }
+            .form-row, .form-row-3 { flex-direction: column; gap: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>特定保健指導記録システム</h1>
+    <span class="header-user">ログイン中：山田 花子（保健師）</span>
+</header>
+
+<div class="layout">
+    <nav class="sidebar">
+        <a href="#">ダッシュボード</a>
+        <a href="kenpo_list.html">健保情報管理</a>
+        <a href="subject_list.html" class="active">対象者一覧</a>
+        <a href="#">保健指導記録</a>
+        <a href="#">帳票出力</a>
+        <a href="#">設定</a>
+    </nav>
+
+    <main>
+        <h2 class="page-title">対象者 新規登録</h2>
+        <p class="page-desc">対象者の基本情報と健診データを入力してください。健診データ入力後、階層化判定が自動で行われます。</p>
+
+        <!-- ===== 基本情報 ===== -->
+        <div class="card">
+            <div class="card-heading">基本情報</div>
+
+            <div class="form-row-3">
+                <div class="form-group">
+                    <label>利用者ID <span class="required">必須</span></label>
+                    <input type="text" placeholder="例：U00001">
+                    <div class="form-hint">※ 重複不可</div>
+                </div>
+                <div class="form-group">
+                    <label>受診券整理番号 <span class="optional">任意</span></label>
+                    <input type="text" placeholder="">
+                </div>
+                <div class="form-group">
+                    <label>利用券整理番号 <span class="optional">任意</span></label>
+                    <input type="text" placeholder="">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>氏名（漢字） <span class="optional">任意</span></label>
+                    <input type="text" placeholder="例：佐藤 太郎">
+                </div>
+                <div class="form-group">
+                    <label>氏名（カナ） <span class="required">必須</span></label>
+                    <input type="text" placeholder="例：サトウ タロウ">
+                </div>
+            </div>
+
+            <div class="form-row-3">
+                <div class="form-group">
+                    <label>性別 <span class="required">必須</span></label>
+                    <select id="gender">
+                        <option value="" disabled selected>選択してください</option>
+                        <option value="male">男性</option>
+                        <option value="female">女性</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>生年月日 <span class="required">必須</span></label>
+                    <input type="date" id="birthday">
+                </div>
+                <div class="form-group">
+                    <label>特定保健指導区分 <span class="optional">任意</span></label>
+                    <select>
+                        <option value="" disabled selected>選択してください</option>
+                        <option>動機付け支援</option>
+                        <option>積極的支援</option>
+                        <option>動機付け支援相当</option>
+                    </select>
+                </div>
+            </div>
+
+            <hr class="section-divider">
+
+            <div class="form-group">
+                <label>保険者 <span class="required">必須</span></label>
+                <div class="search-input-wrapper">
+                    <input type="text" id="insurerSearch" placeholder="保険者番号または保険者名で検索" autocomplete="off" oninput="filterInsurer()" onfocus="filterInsurer()">
+                    <span class="search-icon">🔍</span>
+                    <div class="search-dropdown" id="insurerDropdown">
+                        <div class="search-dropdown-item" onclick="selectInsurer('全国健康保険協会 東京支部（01130012）')">全国健康保険協会 東京支部 <span class="sub">01130012</span></div>
+                        <div class="search-dropdown-item" onclick="selectInsurer('東京都医師国民健康保険組合（13020004）')">東京都医師国民健康保険組合 <span class="sub">13020004</span></div>
+                        <div class="search-dropdown-item" onclick="selectInsurer('関東ITソフトウェア健康保険組合（06130015）')">関東ITソフトウェア健康保険組合 <span class="sub">06130015</span></div>
+                        <div class="search-dropdown-item" onclick="selectInsurer('横浜市国民健康保険（14010008）')">横浜市国民健康保険 <span class="sub">14010008</span></div>
+                        <div class="search-dropdown-item" onclick="selectInsurer('トヨタ自動車健康保険組合（06230021）')">トヨタ自動車健康保険組合 <span class="sub">06230021</span></div>
+                    </div>
+                </div>
+                <div class="form-hint">※ 健保情報管理で登録済みの保険者から検索できます</div>
+            </div>
+
+            <div class="form-row-3">
+                <div class="form-group">
+                    <label>被保険者証記号 <span class="optional">任意</span></label>
+                    <input type="text" placeholder="">
+                </div>
+                <div class="form-group">
+                    <label>被保険者証番号 <span class="optional">任意</span></label>
+                    <input type="text" placeholder="">
+                </div>
+                <div class="form-group">
+                    <label>利用者郵便番号 <span class="required">必須</span></label>
+                    <input type="text" placeholder="例：100-0001" maxlength="8">
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 健診データ ===== -->
+        <div class="card">
+            <div class="card-heading">健診データ</div>
+
+            <div class="form-group">
+                <label>健診日 <span class="required">必須</span></label>
+                <input type="date" id="checkupDate" style="max-width:220px;">
+            </div>
+
+            <hr class="section-divider">
+
+            <div class="form-row-3">
+                <div class="form-group">
+                    <label>身長（cm） <span class="required">必須</span></label>
+                    <input type="number" id="height" step="0.1" placeholder="例：170.5" oninput="calcBMI(); runStratification();">
+                </div>
+                <div class="form-group">
+                    <label>体重（kg） <span class="required">必須</span></label>
+                    <input type="number" id="weight" step="0.1" placeholder="例：75.0" oninput="calcBMI(); runStratification();">
+                </div>
+                <div class="form-group">
+                    <label>BMI（自動計算）</label>
+                    <input type="text" id="bmi" readonly placeholder="自動計算されます">
+                </div>
+            </div>
+
+            <div class="form-row-3">
+                <div class="form-group">
+                    <label>腹囲（cm） <span class="required">必須</span></label>
+                    <input type="number" id="waist" step="0.1" placeholder="例：88.0" oninput="runStratification();">
+                </div>
+                <div class="form-group">
+                    <label>血圧（収縮期/拡張期 mmHg） <span class="required">必須</span></label>
+                    <div class="bp-row">
+                        <input type="number" id="sbp" placeholder="収縮期" oninput="runStratification();">
+                        <span class="bp-slash">/</span>
+                        <input type="number" id="dbp" placeholder="拡張期" oninput="runStratification();">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>喫煙歴 <span class="required">必須</span></label>
+                    <select id="smoking" onchange="runStratification();">
+                        <option value="" disabled selected>選択してください</option>
+                        <option value="1">1：はい</option>
+                        <option value="2">2：以前は吸っていたが、最近1ヶ月間は吸っていない</option>
+                        <option value="3">3：いいえ</option>
+                    </select>
+                </div>
+            </div>
+
+            <hr class="section-divider">
+
+            <div class="card-heading" style="border-bottom: 1px solid #e8edef; margin-bottom: 16px; padding-bottom: 10px; font-size: 14px;">服薬状況</div>
+
+            <div class="form-row-3">
+                <div class="form-group">
+                    <label>高血圧症治療薬</label>
+                    <select id="medBP" onchange="runStratification();">
+                        <option value="no" selected>なし</option>
+                        <option value="yes">あり</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>脂質異常症治療薬</label>
+                    <select id="medLipid" onchange="runStratification();">
+                        <option value="no" selected>なし</option>
+                        <option value="yes">あり</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>糖尿病治療薬</label>
+                    <select id="medDiabetes" onchange="runStratification();">
+                        <option value="no" selected>なし</option>
+                        <option value="yes">あり</option>
+                    </select>
+                </div>
+            </div>
+
+            <hr class="section-divider">
+
+            <div class="card-heading" style="border-bottom: 1px solid #e8edef; margin-bottom: 16px; padding-bottom: 10px; font-size: 14px;">任意検査項目（血液検査等）</div>
+
+            <div class="form-row-3">
+                <div class="form-group">
+                    <label>内臓脂肪面積（cm²） <span class="optional">任意</span></label>
+                    <input type="number" id="visceralFat" step="0.1" placeholder="" oninput="runStratification();">
+                </div>
+                <div class="form-group">
+                    <label>空腹時血糖（mg/dL） <span class="optional">任意</span></label>
+                    <input type="number" id="fbg" step="1" placeholder="" oninput="runStratification();">
+                </div>
+                <div class="form-group">
+                    <label>HbA1c（NGSP %） <span class="optional">任意</span></label>
+                    <input type="number" id="hba1c" step="0.1" placeholder="" oninput="runStratification();">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>空腹時中性脂肪（mg/dL） <span class="optional">任意</span></label>
+                    <input type="number" id="tg" step="1" placeholder="" oninput="runStratification();">
+                </div>
+                <div class="form-group">
+                    <label>HDLコレステロール（mg/dL） <span class="optional">任意</span></label>
+                    <input type="number" id="hdl" step="1" placeholder="" oninput="runStratification();">
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 階層化判定結果 ===== -->
+        <div class="result-panel" id="resultPanel">
+            <div class="result-heading">階層化判定結果</div>
+            <div id="resultContent">
+                <div class="result-waiting">健診データを入力すると、自動で階層化判定が行われます。</div>
+            </div>
+        </div>
+
+        <!-- ===== ボタン ===== -->
+        <div style="max-width:880px;">
+            <div class="btn-area">
+                <a href="subject_list.html" class="btn btn-secondary">キャンセル</a>
+                <button class="btn btn-primary">登録する</button>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<script>
+/* ===== 保険者検索 ===== */
+function filterInsurer() {
+    var input = document.getElementById('insurerSearch');
+    var dropdown = document.getElementById('insurerDropdown');
+    var items = dropdown.querySelectorAll('.search-dropdown-item');
+    var val = input.value.trim().toLowerCase();
+    var anyVisible = false;
+    items.forEach(function(item) {
+        var text = item.textContent.toLowerCase();
+        if (val === '' || text.indexOf(val) !== -1) {
+            item.style.display = 'block';
+            anyVisible = true;
+        } else {
+            item.style.display = 'none';
+        }
+    });
+    dropdown.classList.toggle('show', anyVisible);
+}
+
+function selectInsurer(name) {
+    document.getElementById('insurerSearch').value = name;
+    document.getElementById('insurerDropdown').classList.remove('show');
+}
+
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.search-input-wrapper')) {
+        document.getElementById('insurerDropdown').classList.remove('show');
+    }
+});
+
+/* ===== BMI自動計算 ===== */
+function calcBMI() {
+    var h = parseFloat(document.getElementById('height').value);
+    var w = parseFloat(document.getElementById('weight').value);
+    var bmiField = document.getElementById('bmi');
+    if (h > 0 && w > 0) {
+        var hm = h / 100;
+        var bmi = w / (hm * hm);
+        bmiField.value = bmi.toFixed(1);
+    } else {
+        bmiField.value = '';
+    }
+}
+
+/* ===== 年齢計算 ===== */
+function calcAge(checkupDateStr, birthdayStr) {
+    if (!checkupDateStr || !birthdayStr) return null;
+    var cd = new Date(checkupDateStr);
+    var bd = new Date(birthdayStr);
+    var age = cd.getFullYear() - bd.getFullYear();
+    var m = cd.getMonth() - bd.getMonth();
+    if (m < 0 || (m === 0 && cd.getDate() < bd.getDate())) age--;
+    return age;
+}
+
+/* ===== 階層化判定 ===== */
+function runStratification() {
+    var gender = document.getElementById('gender').value;
+    var birthday = document.getElementById('birthday').value;
+    var checkupDate = document.getElementById('checkupDate').value;
+    var height = parseFloat(document.getElementById('height').value);
+    var weight = parseFloat(document.getElementById('weight').value);
+    var waist = parseFloat(document.getElementById('waist').value);
+    var sbp = parseFloat(document.getElementById('sbp').value);
+    var dbp = parseFloat(document.getElementById('dbp').value);
+    var smoking = document.getElementById('smoking').value;
+
+    var medBP = document.getElementById('medBP').value;
+    var medLipid = document.getElementById('medLipid').value;
+    var medDiabetes = document.getElementById('medDiabetes').value;
+
+    var visceralFat = document.getElementById('visceralFat').value !== '' ? parseFloat(document.getElementById('visceralFat').value) : null;
+    var fbg = document.getElementById('fbg').value !== '' ? parseFloat(document.getElementById('fbg').value) : null;
+    var hba1c = document.getElementById('hba1c').value !== '' ? parseFloat(document.getElementById('hba1c').value) : null;
+    var tg = document.getElementById('tg').value !== '' ? parseFloat(document.getElementById('tg').value) : null;
+    var hdl = document.getElementById('hdl').value !== '' ? parseFloat(document.getElementById('hdl').value) : null;
+
+    var container = document.getElementById('resultContent');
+
+    // 必須項目チェック
+    if (!gender || !birthday || !checkupDate || isNaN(height) || isNaN(weight) || isNaN(waist) || isNaN(sbp) || isNaN(dbp) || !smoking) {
+        container.innerHTML = '<div class="result-waiting">健診データの必須項目（性別・生年月日・健診日・身長・体重・腹囲・血圧・喫煙歴）をすべて入力すると、自動で階層化判定が行われます。</div>';
+        return;
+    }
+
+    var age = calcAge(checkupDate, birthday);
+    if (age === null || age < 40 || age >= 75) {
+        container.innerHTML = '<div class="result-waiting">対象年齢は40歳以上75歳未満です。（現在の年齢：' + (age !== null ? age + '歳' : '不明') + '）</div>';
+        return;
+    }
+
+    var bmi = weight / ((height / 100) * (height / 100));
+    var steps = [];
+    var finalClass = '';
+    var finalText = '';
+
+    // ---------- STEP 0: 服薬除外 ----------
+    var onMed = (medBP === 'yes' || medLipid === 'yes' || medDiabetes === 'yes');
+    if (onMed) {
+        var meds = [];
+        if (medBP === 'yes') meds.push('高血圧症治療薬');
+        if (medLipid === 'yes') meds.push('脂質異常症治療薬');
+        if (medDiabetes === 'yes') meds.push('糖尿病治療薬');
+        steps.push({ label: 'STEP 0', text: '服薬除外判定：<strong>' + meds.join('、') + '</strong> を服用中 → <strong>特定保健指導対象外（情報提供）</strong>' });
+
+        renderResult(steps, 'result-gray', '情報提供（対象外）', '服薬中のため特定保健指導の対象外です', container);
+        return;
+    }
+    steps.push({ label: 'STEP 0', text: '服薬除外判定：治療薬の服用 <strong>なし</strong> → 判定継続' });
+
+    // ---------- STEP 1: 内臓脂肪蓄積リスク ----------
+    var group = 0; // 0=対象外, 1=グループ1, 2=グループ2
+    var step1Text = '';
+
+    if (visceralFat !== null) {
+        // 内臓脂肪面積優先
+        if (visceralFat >= 100) {
+            group = 1;
+            step1Text = '内臓脂肪面積 <strong>' + visceralFat + ' cm²（≧100）</strong> → <strong>グループ1</strong>';
+        } else {
+            if (bmi >= 25) {
+                group = 2;
+                step1Text = '内臓脂肪面積 <strong>' + visceralFat + ' cm²（＜100）</strong>、BMI <strong>' + bmi.toFixed(1) + '（≧25）</strong> → <strong>グループ2</strong>';
+            } else {
+                group = 0;
+                step1Text = '内臓脂肪面積 <strong>' + visceralFat + ' cm²（＜100）</strong>、BMI <strong>' + bmi.toFixed(1) + '（＜25）</strong> → <strong>情報提供（対象外）</strong>';
+            }
+        }
+    } else {
+        // 腹囲で判定
+        var waistThreshold = (gender === 'male') ? 85 : 90;
+        if (waist >= waistThreshold) {
+            group = 1;
+            step1Text = '腹囲 <strong>' + waist + ' cm（' + (gender === 'male' ? '男性≧85' : '女性≧90') + '）</strong> → <strong>グループ1</strong>';
+        } else {
+            if (bmi >= 25) {
+                group = 2;
+                step1Text = '腹囲 <strong>' + waist + ' cm（基準未満）</strong>、BMI <strong>' + bmi.toFixed(1) + '（≧25）</strong> → <strong>グループ2</strong>';
+            } else {
+                group = 0;
+                step1Text = '腹囲 <strong>' + waist + ' cm（基準未満）</strong>、BMI <strong>' + bmi.toFixed(1) + '（＜25）</strong> → <strong>情報提供（対象外）</strong>';
+            }
+        }
+    }
+    steps.push({ label: 'STEP 1', text: '内臓脂肪蓄積リスク判定：' + step1Text });
+
+    if (group === 0) {
+        renderResult(steps, 'result-gray', '情報提供（対象外）', '腹囲・BMI基準に該当しないため対象外です', container);
+        return;
+    }
+
+    // ---------- STEP 2: 追加リスクカウント ----------
+    var confirmedRisks = 0;
+    var unknownCount = 0;
+    var riskDetails = [];
+
+    // ① 血圧
+    var bpRisk = (sbp >= 130 || dbp >= 85);
+    if (bpRisk) {
+        confirmedRisks++;
+        riskDetails.push('① 血圧：該当（' + sbp + '/' + dbp + '）');
+    } else {
+        riskDetails.push('① 血圧：非該当（' + sbp + '/' + dbp + '）');
+    }
+
+    // ② 脂質
+    var lipidEntered = (tg !== null || hdl !== null);
+    var lipidRisk = false;
+    if (lipidEntered) {
+        if ((tg !== null && tg >= 150) || (hdl !== null && hdl < 40)) {
+            lipidRisk = true;
+            confirmedRisks++;
+            riskDetails.push('② 脂質：該当' + (tg !== null ? '（TG=' + tg + '）' : '') + (hdl !== null ? '（HDL=' + hdl + '）' : ''));
+        } else {
+            riskDetails.push('② 脂質：非該当' + (tg !== null ? '（TG=' + tg + '）' : '') + (hdl !== null ? '（HDL=' + hdl + '）' : ''));
+        }
+    } else {
+        unknownCount++;
+        riskDetails.push('② 脂質：<strong>未入力</strong>');
+    }
+
+    // ③ 血糖
+    var bgEntered = (fbg !== null || hba1c !== null);
+    var bgRisk = false;
+    if (bgEntered) {
+        if ((fbg !== null && fbg >= 100) || (hba1c !== null && hba1c >= 5.6)) {
+            bgRisk = true;
+            confirmedRisks++;
+            riskDetails.push('③ 血糖：該当' + (fbg !== null ? '（FBG=' + fbg + '）' : '') + (hba1c !== null ? '（HbA1c=' + hba1c + '）' : ''));
+        } else {
+            riskDetails.push('③ 血糖：非該当' + (fbg !== null ? '（FBG=' + fbg + '）' : '') + (hba1c !== null ? '（HbA1c=' + hba1c + '）' : ''));
+        }
+    } else {
+        unknownCount++;
+        riskDetails.push('③ 血糖：<strong>未入力</strong>');
+    }
+
+    // ④ 喫煙（①〜③が1つ以上該当の場合のみカウント）
+    var hasSmoking = (smoking === '1');
+    var anyRisk123 = bpRisk || lipidRisk || bgRisk;
+    // 未入力項目がすべて該当した場合も考慮
+    var potentialAnyRisk123 = anyRisk123 || (unknownCount > 0);
+
+    if (hasSmoking && anyRisk123) {
+        confirmedRisks++;
+        riskDetails.push('④ 喫煙：該当（①〜③に該当あり → カウント）');
+    } else if (hasSmoking && !anyRisk123) {
+        riskDetails.push('④ 喫煙：喫煙歴あり（①〜③に該当なし → カウント対象外）');
+    } else {
+        riskDetails.push('④ 喫煙：非該当');
+    }
+
+    // 最大リスク数
+    var maxRisks = confirmedRisks + unknownCount;
+    // 喫煙の追加考慮：未入力の①〜③が該当になった場合に喫煙もカウントされる可能性
+    if (hasSmoking && !anyRisk123 && potentialAnyRisk123) {
+        maxRisks++;
+    }
+
+    steps.push({ label: 'STEP 2', text: '追加リスクカウント：<br>' + riskDetails.join('<br>') + '<br><strong>確定リスク数：' + confirmedRisks + ' ／ 最大リスク数：' + maxRisks + '</strong>' });
+
+    // ---------- STEP 3: 階層化判定 ----------
+    var isElder = (age >= 65);
+
+    function getLevel(grp, risks) {
+        if (grp === 1) {
+            if (risks >= 2) return isElder ? 'motivation' : 'active';
+            if (risks === 1) return 'motivation';
+            return 'info';
+        } else {
+            if (risks >= 3) return isElder ? 'motivation' : 'active';
+            if (risks >= 1) return 'motivation';
+            return 'info';
+        }
+    }
+
+    var confirmedLevel = getLevel(group, confirmedRisks);
+    var maxLevel = getLevel(group, maxRisks);
+
+    var levelLabels = { 'active': '積極的支援', 'motivation': '動機付け支援', 'info': '情報提供（対象外）' };
+    var levelOrder = { 'info': 0, 'motivation': 1, 'active': 2 };
+
+    steps.push({ label: 'STEP 3', text: '階層化判定：グループ' + group + '・年齢 ' + age + '歳（' + (isElder ? '65〜74歳' : '64歳以下') + '）<br>確定リスク数（' + confirmedRisks + '）での判定 → <strong>' + levelLabels[confirmedLevel] + '</strong><br>最大リスク数（' + maxRisks + '）での判定 → <strong>' + levelLabels[maxLevel] + '</strong>' });
+
+    // ---------- STEP 4: 確定/保留判定 ----------
+    if (unknownCount === 0) {
+        // 血液検査がすべて入力済み → 確定
+        steps.push({ label: 'STEP 4', text: '確定／保留判定：血液検査データ入力済み → <strong>判定確定</strong>' });
+
+        if (confirmedLevel === 'active') {
+            renderResult(steps, 'result-red', '積極的支援 確定', '当日から初回面接を実施可能です', container);
+        } else if (confirmedLevel === 'motivation') {
+            renderResult(steps, 'result-orange', '動機付け支援 確定', '当日から初回面接を実施可能です', container);
+        } else {
+            renderResult(steps, 'result-gray', '情報提供（対象外）確定', '特定保健指導の対象外です', container);
+        }
+    } else {
+        // 血液検査に未入力あり → 確定 or 保留
+        if (confirmedLevel === maxLevel) {
+            // 確定リスクと最大リスクで判定が同じ → 確定
+            steps.push({ label: 'STEP 4', text: '確定／保留判定：血液検査未入力あり（' + unknownCount + '項目）ですが、判定結果は変わりません → <strong>判定確定</strong>' });
+
+            if (confirmedLevel === 'active') {
+                renderResult(steps, 'result-red', '積極的支援 確定', '当日から初回面接を実施可能です', container);
+            } else if (confirmedLevel === 'motivation') {
+                renderResult(steps, 'result-orange', '動機付け支援 確定', '当日から初回面接を実施可能です', container);
+            } else {
+                renderResult(steps, 'result-gray', '情報提供（対象外）確定', '特定保健指導の対象外です', container);
+            }
+        } else {
+            // 確定と最大で異なる → 保留含む
+            if (levelOrder[confirmedLevel] >= 1) {
+                // 動機付け以上は確定、上位に変わる可能性あり
+                steps.push({ label: 'STEP 4', text: '確定／保留判定：血液検査未入力あり（' + unknownCount + '項目）<br><strong>' + levelLabels[confirmedLevel] + ' 以上確定</strong>（血液検査結果により <strong>' + levelLabels[maxLevel] + '</strong> になる可能性あり）<br>当日から初回面接を実施可能です' });
+
+                if (confirmedLevel === 'active') {
+                    renderResult(steps, 'result-red', '積極的支援 確定', '当日から初回面接を実施可能です', container);
+                } else {
+                    renderResult(steps, 'result-orange', '動機付け支援 以上確定', '当日から初回面接を実施可能（血液検査結果により' + levelLabels[maxLevel] + 'の可能性あり）', container);
+                }
+            } else {
+                // 情報提供だが上位になる可能性 → 保留
+                steps.push({ label: 'STEP 4', text: '確定／保留判定：血液検査未入力あり（' + unknownCount + '項目）<br>現時点では情報提供ですが、血液検査結果により <strong>' + levelLabels[maxLevel] + '</strong> になる可能性があります → <strong>保留（血液検査結果待ち）</strong>' });
+
+                renderResult(steps, 'result-yellow', '保留：血液検査結果待ち', '血液検査結果により' + levelLabels[maxLevel] + 'になる可能性があります', container);
+            }
+        }
+    }
+}
+
+function renderResult(steps, colorClass, title, subtitle, container) {
+    var html = '<div class="result-steps">';
+    steps.forEach(function(s) {
+        html += '<div class="step-row"><span class="step-label">' + s.label + '</span><div class="step-content">' + s.text + '</div></div>';
+    });
+    html += '</div>';
+    html += '<div class="final-result ' + colorClass + '">';
+    html += '<div class="final-label">最終判定</div>';
+    html += '<div class="final-value">' + title + '</div>';
+    html += '<div style="font-size:13px; margin-top:6px; opacity:0.8;">' + subtitle + '</div>';
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+/* ===== 性別・生年月日・健診日変更時も再判定 ===== */
+document.getElementById('gender').addEventListener('change', runStratification);
+document.getElementById('birthday').addEventListener('change', runStratification);
+document.getElementById('checkupDate').addEventListener('change', runStratification);
+</script>
+
+</body>
+</html>
