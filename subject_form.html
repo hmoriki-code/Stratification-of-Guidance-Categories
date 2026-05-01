@@ -558,16 +558,29 @@ function runStratification() {
         riskDetails.push('② 脂質：<strong>未入力</strong>');
     }
 
-    // ③ 血糖
+    // ③ 血糖 — 空腹時血糖(FBG)が入力されている場合はFBGを優先し、
+    //          FBG未入力の場合のみHbA1cで判定する
     var bgEntered = (fbg !== null || hba1c !== null);
     var bgRisk = false;
     if (bgEntered) {
-        if ((fbg !== null && fbg >= 100) || (hba1c !== null && hba1c >= 5.6)) {
-            bgRisk = true;
-            confirmedRisks++;
-            riskDetails.push('③ 血糖：該当' + (fbg !== null ? '（FBG=' + fbg + '）' : '') + (hba1c !== null ? '（HbA1c=' + hba1c + '）' : ''));
+        if (fbg !== null) {
+            // FBGが入力されている → FBGのみで判定（HbA1cは参考表示のみ）
+            if (fbg >= 100) {
+                bgRisk = true;
+                confirmedRisks++;
+                riskDetails.push('③ 血糖：該当（FBG=' + fbg + '≧100 を優先適用）' + (hba1c !== null ? '（参考 HbA1c=' + hba1c + '）' : ''));
+            } else {
+                riskDetails.push('③ 血糖：非該当（FBG=' + fbg + '＜100 を優先適用）' + (hba1c !== null ? '（参考 HbA1c=' + hba1c + '）' : ''));
+            }
         } else {
-            riskDetails.push('③ 血糖：非該当' + (fbg !== null ? '（FBG=' + fbg + '）' : '') + (hba1c !== null ? '（HbA1c=' + hba1c + '）' : ''));
+            // FBG未入力 → HbA1cで判定
+            if (hba1c >= 5.6) {
+                bgRisk = true;
+                confirmedRisks++;
+                riskDetails.push('③ 血糖：該当（FBG未入力のためHbA1c=' + hba1c + '≧5.6 で判定）');
+            } else {
+                riskDetails.push('③ 血糖：非該当（FBG未入力のためHbA1c=' + hba1c + '＜5.6 で判定）');
+            }
         }
     } else {
         unknownCount++;
